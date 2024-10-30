@@ -5,5 +5,11 @@
 ## Usage
 
 ```bash
-./mkchangelog [/path/to/changelog-file] [ [distro-codename] [package-codename] [vendor-name] [vendor-email] [vendor-team-description] [urgency-marker] ]
+./mkchangelog [/path/to/changelog-file] [ \
+    [distro-codename] \
+    [package-codename] \
+    [vendor-name] \
+    [vendor-email] \
+    [vendor-team-description] \
+    [urgency-marker] ]
 ```
