@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+commit="${1}"
+all_tags=$(git for-each-ref --sort=-creatordate --format='%(refname:short)' refs/tags)
+for tag in ${all_tags}; do
+    version=$(echo "${tag}" | grep -o -E '[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}')
+    if [ -n "${version}" ]; then
+        tag_commit=$(git rev-parse "${tag}")
+        if git merge-base --is-ancestor "${tag_commit}" "${commit}" 2>/dev/null; then
+            echo "${tag}"
+            exit 0
+        fi
+    fi
+done
+exit 1

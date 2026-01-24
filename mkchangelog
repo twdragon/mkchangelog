@@ -2,15 +2,15 @@
 
 # Helper functions
 get_latest_semver_tag() {
-    local commit="$1"
+    local commit="${1}"
     local all_tags
     all_tags=$(git for-each-ref --sort=-creatordate --format='%(refname:short)' refs/tags)
-    for tag in $all_tags; do
-        version=$(echo "$tag" | grep -o -E '[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}')
-        if [ -n "$version" ]; then
-            tag_commit=$(git rev-parse "$tag")
-            if git merge-base --is-ancestor "$tag_commit" "$commit" 2>/dev/null; then
-                echo "$tag"
+    for tag in ${all_tags}; do
+        version=$(echo "${tag}" | grep -o -E '[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}')
+        if [ -n "${version}" ]; then
+            tag_commit=$(git rev-parse "${tag}")
+            if git merge-base --is-ancestor "${tag_commit}" "${commit}" 2>/dev/null; then
+                echo "${tag}"
                 return 0
             fi
         fi
@@ -19,25 +19,25 @@ get_latest_semver_tag() {
 }
 
 get_highest_semver_tag() {
-    local commit="$1"
+    local commit="${1}"
     local tags
-    tags=$(git tag --points-at "$commit" 2>/dev/null)
+    tags=$(git tag --points-at "${commit}" 2>/dev/null)
     local versions=""
-    for tag in $tags; do
-        version=$(echo "$tag" | grep -o -E '[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}')
-        if [ -n "$version" ]; then
-            versions="$versions $version"
+    for tag in ${tags}; do
+        version=$(echo "${tag}" | grep -o -E '[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}')
+        if [ -n "${version}" ]; then
+            versions="${versions} ${version}"
         fi
     done
-    if [ -z "$versions" ]; then
+    if [ -z "${versions}" ]; then
         return 1  # No semver tags
     fi
     local highest_version
-    highest_version=$(echo "$versions" | tr ' ' '\n' | sort -V -r | head -n1)
+    highest_version=$(echo "${versions}" | tr ' ' '\n' | sort -V -r | head -n1)
     # Find the tag matching this version (assumes unique versions per commit).
-    for tag in $tags; do
-        if echo "$tag" | grep -q "$highest_version"; then
-            echo "$tag"
+    for tag in ${tags}; do
+        if echo "${tag}" | grep -q "${highest_version}"; then
+            echo "${tag}"
             return 0
         fi
     done
@@ -46,14 +46,14 @@ get_highest_semver_tag() {
 
 # System environment setup
 utf8_locale=$(locale -a | grep -i -E 'en_us\.(utf8|utf-8)' | head -n 1)
-if [ -n "$utf8_locale" ]; then
-    export LC_TIME="$utf8_locale"
+if [ -n "${utf8_locale}" ]; then
+    export LC_TIME="${utf8_locale}"
 else
     english_locale=$(locale -a | grep -i 'en_' | head -n 1)
-    if [ -n "$english_locale" ]; then
-        export LC_TIME="$english_locale"
+    if [ -n "${english_locale}" ]; then
+        export LC_TIME="${english_locale}"
     else
-        echo "No English locale found. Please set up English locale to have the correct Debian changelog file!"
+        echo "No English locale found. Please set up en_US UTF-8 locale to have the correct Debian changelog file!"
         exit 1
     fi
 fi
@@ -102,29 +102,29 @@ echo "Arguments: [/path/to/changelog] [ [distro-codename] [package-codename] [ve
 
 # Find the latest semver tag reachable from HEAD.
 TAG_STRING=$(get_latest_semver_tag HEAD)
-if [ -z "$TAG_STRING" ]; then
+if [ -z "${TAG_STRING}" ]; then
     echo "ERROR! No semver tag found reachable from HEAD."
     exit 1
 fi
-VERSION_STRING=$(echo "$TAG_STRING" | grep -o -E '[0-9]+\.[0-9]+\.[0-9]+')
-if [ -z "$VERSION_STRING" ]; then
-    echo "ERROR! Version string parser error on tag $TAG_STRING"
+VERSION_STRING=$(echo "${TAG_STRING}" | grep -o -E '[0-9]+\.[0-9]+\.[0-9]+')
+if [ -z "${VERSION_STRING}" ]; then
+    echo "ERROR! Version string parser error on tag ${TAG_STRING}"
     exit 1
 fi
 
-tag_commit=$(git rev-parse "$TAG_STRING")
+tag_commit=$(git rev-parse "${TAG_STRING}")
 head_commit=$(git rev-parse HEAD)
 
-if [ "$tag_commit" = "$head_commit" ]; then
+if [ "${tag_commit}" = "${head_commit}" ]; then
     # Exact match: Use the highest semver tag on this commit.
     TAG_STRING=$(get_highest_semver_tag HEAD)
-    if [ -z "$TAG_STRING" ]; then
+    if [ -z "${TAG_STRING}" ]; then
         echo "ERROR! No semver tag on HEAD."
         exit 1
     fi
-    VERSION_STRING=$(echo "$TAG_STRING" | grep -o -E '[0-9]+\.[0-9]+\.[0-9]+')
+    VERSION_STRING=$(echo "${TAG_STRING}" | grep -o -E '[0-9]+\.[0-9]+\.[0-9]+')
     PREV_TAG=$(get_latest_semver_tag "${TAG_STRING}^")
-    if [ -z "$PREV_TAG" ]; then
+    if [ -z "${PREV_TAG}" ]; then
         PREV_TAG=$(git rev-parse --short "${TAG_STRING}^")  # Fallback if no prior semver.
     fi
     LAST_MESSAGES=$(git log "${PREV_TAG}".."${TAG_STRING}" --pretty=format:"  * %s")
@@ -162,7 +162,7 @@ EOM
 EOM
     # Append the last tagged release's changes.
     PREV_TAG=$(get_latest_semver_tag "${TAG_STRING}^")
-    if [ -z "$PREV_TAG" ]; then
+    if [ -z "${PREV_TAG}" ]; then
         PREV_TAG=$(git rev-parse --short "${TAG_STRING}^")  # Fallback.
     fi
     LAST_MESSAGES=$(git log "${PREV_TAG}".."${TAG_STRING}" --pretty=format:"  * %s")
@@ -184,15 +184,15 @@ fi
 
 LAST_TAG="$TAG_STRING"  # Reuse from above, since it's already the latest semver.
 RETROSPECTIVE_TAGS=$(git for-each-ref --sort=-creatordate --format='%(refname:short)' refs/tags | grep -A 1000000 "${LAST_TAG}" | grep -v "${LAST_TAG}")
-for GIT_TAG in $RETROSPECTIVE_TAGS; do
-    VERSION_STRING=$(echo "$GIT_TAG" | grep -o -E '[0-9]+\.[0-9]+\.[0-9]+')
-    if [ -z "$VERSION_STRING" ]; then
+for GIT_TAG in ${RETROSPECTIVE_TAGS}; do
+    VERSION_STRING=$(echo "${GIT_TAG}" | grep -o -E '[0-9]+\.[0-9]+\.[0-9]+')
+    if [ -z "${VERSION_STRING}" ]; then
         continue  # Skip non-semver tags.
     fi
     TAG_CREATED=$(git log -1 --format=%ct "${GIT_TAG}")
     TAG_TIMESTAMP=$(date -d "@${TAG_CREATED}" +"%a, %d %b %Y %H:%M:%S %z")
     PREV_TAG=$(get_latest_semver_tag "${GIT_TAG}^")
-    if [ -z "$PREV_TAG" ]; then
+    if [ -z "${PREV_TAG}" ]; then
         PREV_TAG=$(git describe --tags --always --abbrev=0 "${GIT_TAG}^")  # Fallback to original.
     fi
     LAST_MESSAGES=$(git log "${PREV_TAG}".."${GIT_TAG}" --pretty=format:"  * %s")

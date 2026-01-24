@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+commit="${1}"
+tags=$(git tag --points-at "${commit}" 2>/dev/null)
+versions=""
+for tag in ${tags}; do
+    version=$(echo "${tag}" | grep -o -E '[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}')
+    if [ -n "${version}" ]; then
+        versions="${versions} ${version}"
+    fi
+done
+if [ -z "${versions}" ]; then
+    return 1  # No semver tags
+fi
+highest_version=$(echo "${versions}" | tr ' ' '\n' | sort -V -r | head -n1)
+for tag in ${tags}; do
+    if echo "${tag}" | grep -q "${highest_version}"; then
+        echo "${tag}"
+        exit 0
+    fi
+done
+exit 1
