@@ -7,7 +7,7 @@ for tag in ${all_tags}; do
     if [ -n "${version}" ]; then
         tag_commit=$(git rev-parse "${tag}")
         if git merge-base --is-ancestor "${tag_commit}" "${commit}" 2>/dev/null; then
-            echo "${tag}"
+            echo "${version}"
             exit 0
         fi
     fi

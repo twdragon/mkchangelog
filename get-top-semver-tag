@@ -15,7 +15,7 @@ fi
 highest_version=$(echo "${versions}" | tr ' ' '\n' | sort -V -r | head -n1)
 for tag in ${tags}; do
     if echo "${tag}" | grep -q "${highest_version}"; then
-        echo "${tag}"
+        echo "${highest_version}"
         exit 0
     fi
 done
