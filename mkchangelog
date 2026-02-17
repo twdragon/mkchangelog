@@ -117,7 +117,7 @@ head_commit=$(git rev-parse HEAD)
 
 if [ "${tag_commit}" = "${head_commit}" ]; then
     # Exact match: Use the highest semver tag on this commit.
-    TAG_STRING=$(get_highest_semver_tag HEAD)
+    TAG_STRING=$(get_latest_semver_tag HEAD)
     if [ -z "${TAG_STRING}" ]; then
         echo "ERROR! No semver tag on HEAD."
         exit 1
